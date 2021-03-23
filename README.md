@@ -5,4 +5,4 @@ $ npm run start
 ```
 for fill in out the form src/index.js
 
-for to separately bypass captcha src/captcha.js
+for to separately bypass captcha src/only_captcha.js
