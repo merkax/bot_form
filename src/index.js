@@ -13,74 +13,68 @@ const OFFER = process.env.OFFER;
 const API_KEY = process.env.API_KEY;
 
 (async () => {
-  //     try {
-  const browser = await puppeteer.launch({
-    headless: false,
-    slowMo: 5//,
-    // devtools: true
-  })
+  try {
+    const browser = await puppeteer.launch({
+      headless: false,
+      slowMo: 5//,
+      // devtools: true
+    })
 
-  const page = await browser.newPage()
-  await page.setViewport({ width: 1920, height: 1080 }) 
-  // await page.setRequestInterception(true) /?
-  
-  const urlFromFile = 'https://automatedconversions.com/'
-  // const urlFromFile = 'https://automatedconversions.com/contact'
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1920, height: 1080 }) 
 
+    const urlFromFile = 'https://automatedconversions.com/'
+    // const urlFromFile = 'https://automatedconversions.com/contact'
+
+    const viewedLinks = []
+
+    await searchProcess(page, urlFromFile, viewedLinks)
+  } catch(err) {
+    console.log('Error from main function:', err)// todo continue next file
+  }
+})();
+
+async function searchProcess(page, urlFromFile, viewedLinks) {
   await page.goto(urlFromFile, { waitUntil: 'networkidle2' })
 
-  const formOnPage = await searchForm(page)
+  const formOnPage = await page.$$('form')
 
   if (formOnPage.length !== 0) {
     console.log('I found forms');
-    fillInForm(page)
-    recaptcha(page)
-    // break// ?
+    try {
+      await fillInForm(page)
+      await recaptcha(page)
+      //todo return true in file;
+    } catch(err) {
+      if (err) throw err// todo // return false in file;
+      console.log('Error from fill in form', err)
+    }
+  } else {
+    const links = await searchLinks(page)
+    const linksWithoutDouble = Array.from(new Set(links))
+    
+    console.log("Links from page on which watch now:", linksWithoutDouble);
+    
+    newLinks = linksWithoutDouble.filter(function (link) {
+      return !viewedLinks.includes(link);
+    });
+    console.log("New links without visits:", newLinks);
+
+    for (const link of newLinks) {
+      console.log("Watching this link now:", link);
+      viewedLinks.push(link)
+
+      console.log("Lins visited:", viewedLinks);
+
+      await page.goto(link, { waitUntil: 'networkidle2' })
+      await searchProcess(page, link, viewedLinks)
+      // todo
+      // if watched all links and dont find form, then return false in file
+    }
   }
+}
 
-  const links = await searchHref(page)
-  const linksWithoutDouble = Array.from(new Set(links))
-  
-  const viewed_links = []
-
-  for (const link of linksWithoutDouble) {
-    console.log("Watching this link:", link);
-
-    viewed_links.push(link)
-
-    await page.goto(link, { waitUntil: 'networkidle2' })
-
-    const formOnPage = await searchForm(page)
-
-    newLinks = await searchHref(page)
-    // console.log("init newLinks", newLinks);
-
-    await fs.appendFile('./tmp/newlinks.json', JSON.stringify(newLinks, null, 2))
-    // or  = .concat(newLinks)
-
-    if (formOnPage.length !== 0) {
-      console.log('I found forms');
-      break
-    } 
-  }
-
-  fillInForm(page)
-  recaptcha(page)
-
-  // console.log("newLinks global", newLinks);
-  
-  // TODO
-  // read new links here?
-  // let newLinks = JSON.parse(await fs.readFile(`./tmp/newlinks.json`))
-  //compare new links with viewed ones this or in for cycle
-
-  //if there is not a single form on all viewed links, then I look at another site
-
-  // 
-  // await browser.close()
-})()
-
-async function searchHref(page) {
+async function searchLinks(page) {
     const anchors = await page.$$('a')
 
     const propertyJsHandles = await Promise.all(
@@ -89,10 +83,6 @@ async function searchHref(page) {
     return await Promise.all(
       propertyJsHandles.map(handle => handle.jsonValue())
     );
-}
-
-async function searchForm(page) {
-  return await page.$$('form')
 }
 
 async function fillInForm(page) {
@@ -108,12 +98,16 @@ async function recaptcha(page) {
 
   const response = await pollForRequestResults(API_KEY, requestId)
 
-  console.log("response: ", response);
-  await page.evaluate(`document.getElementById("g-recaptcha-response").innerHTML="${response}";`);
-  console.log("after evaluate");
+  console.log("Response: ", response);
+  const recap = await page.evaluate(`document.getElementById("g-recaptcha-response").innerHTML="${response}";`);
+  console.log("After evaluate");
 
+  // await Promise.all([
+  //   page.waitForNavigation(),
+  //   page.click('.wpb_wrapper > #wpforms-1676 > #wpforms-form-1676 #wpforms-submit-1676')
+  // ]);
   await page.click('.wpb_wrapper > #wpforms-1676 > #wpforms-form-1676 #wpforms-submit-1676')
-  console.log("after submit");
+  console.log("After submit");
 }
 
 async function initiateCaptchaRequest(apiKey) {
