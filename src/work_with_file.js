@@ -5,8 +5,9 @@ const filePath = `${__dirname}/public/sites.xlsx`
 const workBook = XLSX.readFileSync(filePath)
 const sheetName = workBook.SheetNames
 
-const linksOnSites = () => {
-  const worksheets = {}
+const worksheets = {}
+
+const readSitesFromExcel = () => {
   const sites = []
 
   worksheets[sheetName] = XLSX.utils.sheet_to_json(workBook.Sheets[sheetName])
@@ -18,6 +19,16 @@ const linksOnSites = () => {
   return sites
 }
 
-module.exports = { linksOnSites };
+function writeInExcel(urlFromFile, data) { 
 
-// console.log(linksOnSites());
+  worksheets[sheetName].forEach((cell) => {
+    if (cell['sites'] === urlFromFile) {
+      cell['status'] = data
+    }
+  })
+
+  XLSX.utils.sheet_add_json(workBook.Sheets[sheetName], worksheets[sheetName])
+  XLSX.writeFile(workBook, filePath);
+}
+
+module.exports = { readSitesFromExcel, writeInExcel };

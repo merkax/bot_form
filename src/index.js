@@ -3,7 +3,7 @@ const fs = require('fs').promises
 const path = require('path').promises
 const request = require('request-promise-native');
 const poll = require('promise-poller').default;
-const { linksOnSites } = require('./work_with_file');
+const { readSitesFromExcel, writeInExcel } = require('./work_with_file');
 require('dotenv').config();
 
 const USER_NAME = process.env.USER_NAME;
@@ -23,11 +23,11 @@ const API_KEY = process.env.API_KEY;
     const page = await browser.newPage()
     await page.setViewport({ width: 1920, height: 1080 }) 
 
-    const urlFromFile = linksOnSites()[0]
+    const urlsFromFile = readSitesFromExcel()[0]
 
     const viewedLinks = []
 
-    await searchProcess(page, urlFromFile, viewedLinks)
+    await searchProcess(page, urlsFromFile, viewedLinks)
   } catch(err) {
     console.log('Error from main function:', err)// todo continue next file
   }
