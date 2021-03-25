@@ -5,7 +5,7 @@ const filePath = `${__dirname}/public/sites.xlsx`
 const workBook = XLSX.readFileSync(filePath)
 const sheetName = workBook.SheetNames
 
-export const linksOnSites = () => {
+const linksOnSites = () => {
   const worksheets = {}
   const sites = []
 
@@ -17,5 +17,7 @@ export const linksOnSites = () => {
 
   return sites
 }
+
+module.exports = { linksOnSites };
 
 // console.log(linksOnSites());

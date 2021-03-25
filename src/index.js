@@ -1,12 +1,10 @@
 const puppeteer = require('puppeteer')
 const fs = require('fs').promises
 const path = require('path').promises
-const XLSX = require('xlsx');
 const request = require('request-promise-native');
 const poll = require('promise-poller').default;
+const { linksOnSites } = require('./work_with_file');
 require('dotenv').config();
-
-// import { linksOnSites } from './work_with_file.js';
 
 const USER_NAME = process.env.USER_NAME;
 const COMPANY = process.env.COMPANY;
@@ -155,20 +153,3 @@ function requestCaptchaResults(apiKey, requestId) {
 }
 
 const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
-
-const filePath = `${__dirname}/public/sites.xlsx`
-const workBook = XLSX.readFileSync(filePath)
-const sheetName = workBook.SheetNames
-
-const linksOnSites = () => {
-  const worksheets = {}
-  const sites = []
-
-  worksheets[sheetName] = XLSX.utils.sheet_to_json(workBook.Sheets[sheetName])
-
-  worksheets[sheetName].forEach((cell) => {
-    sites.push(cell['sites'])
-  });
-
-  return sites
-}
