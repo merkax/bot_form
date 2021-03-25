@@ -1,12 +1,10 @@
 const puppeteer = require('puppeteer');
 const request = require('request-promise-native');
 const poll = require('promise-poller').default;
-
-console.log("poll", poll);
 require('dotenv').config();
 
-
 const USER_NAME = process.env.USER_NAME;
+const PHONE = process.env.PHONE;
 const COMPANY = process.env.COMPANY;
 const EMAIL = process.env.EMAIL;
 const OFFER = process.env.OFFER;
@@ -23,17 +21,20 @@ const API_KEY = process.env.API_KEY;
   const page = await browser.newPage()
   await page.setViewport({ width: 1920, height: 1080 }) 
   
-  const urlFromFile = 'https://automatedconversions.com/contact'
+  const urlFromFile = 'https://www.ppcadeditor.com/contact-us/'
   await page.goto(urlFromFile, { waitUntil: 'networkidle2' })
 
   const requestId = await initiateCaptchaRequest(API_KEY)
 
   // from https://chrome.google.com/webstore/detail/headless-recorder/djeegiggegleadkkbgopoonhjimgehda
-  await page.type('#wpforms-1676 > #wpforms-form-1676 #wpforms-1676-field_0', USER_NAME)
-  await page.type('#wpforms-1676 > #wpforms-form-1676 #wpforms-1676-field_8', COMPANY)
-  await page.type('#wpforms-1676 > #wpforms-form-1676 #wpforms-1676-field_1', EMAIL)
-  await page.type('#wpforms-1676 > #wpforms-form-1676 #wpforms-1676-field_2', OFFER)
- 
+  await page.type('.frm_form_fields #field_qh4icy', USER_NAME)
+  await page.waitFor(1000 + Math.random() * 1000)
+  await page.type('.frm_form_fields #field_ocfup1', PHONE)
+  await page.waitFor(1000 + Math.random() * 1000)
+  await page.type('.frm_form_fields #field_29yf4d', EMAIL)
+  await page.waitFor(1000 + Math.random() * 1000)
+  await page.type('.frm_form_fields #field_9jv0r1', OFFER)
+
   console.log("requestId", requestId);
 
   const response = await pollForRequestResults(API_KEY, requestId)
@@ -42,7 +43,8 @@ const API_KEY = process.env.API_KEY;
   await page.evaluate(`document.getElementById("g-recaptcha-response").innerHTML="${response}";`);
   console.log("after evaluate");
 
-  await page.click('.wpb_wrapper > #wpforms-1676 > #wpforms-form-1676 #wpforms-submit-1676')
+  await page.click('.frm_form_fields > fieldset > .frm_fields_container > .frm_submit > .frm_button_submit')
+
   console.log("after submit");
 
   // await browser.close()
@@ -52,8 +54,8 @@ async function initiateCaptchaRequest(apiKey) {
   const formData = {
     method: 'userrecaptcha',
     key: apiKey,
-    googlekey: '6LfLW6AUAAAAADd_dznZsxukQHZSmPIqtfPoUAEq',
-    pageurl: 'https://automatedconversions.com/contact',
+    googlekey: '6LeVzf8ZAAAAAFS0jeTpV4lPt7e4r9dX3d6uUYer',
+    pageurl: 'https://www.ppcadeditor.com/contact-us/',
     json: 1
   };
   console.log(`Submiting solution request to 2captcha for` );
