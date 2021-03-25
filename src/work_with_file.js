@@ -19,10 +19,9 @@ const readSitesFromExcel = () => {
   return sites
 }
 
-function writeInExcel(urlFromFile, data) { 
-
+function writeInExcel(url, data) { 
   worksheets[sheetName].forEach((cell) => {
-    if (cell['sites'] === urlFromFile) {
+    if (cell['sites'] === url) {
       cell['status'] = data
     }
   })
