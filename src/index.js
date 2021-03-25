@@ -1,10 +1,12 @@
 const puppeteer = require('puppeteer')
 const fs = require('fs').promises
 const path = require('path').promises
-const xlsx = require('node-xlsx').default;
+const XLSX = require('xlsx');
 const request = require('request-promise-native');
 const poll = require('promise-poller').default;
 require('dotenv').config();
+
+// import { linksOnSites } from './work_with_file.js';
 
 const USER_NAME = process.env.USER_NAME;
 const COMPANY = process.env.COMPANY;
@@ -23,8 +25,7 @@ const API_KEY = process.env.API_KEY;
     const page = await browser.newPage()
     await page.setViewport({ width: 1920, height: 1080 }) 
 
-    const urlFromFile = 'https://automatedconversions.com/'
-    // const urlFromFile = 'https://automatedconversions.com/contact'
+    const urlFromFile = linksOnSites()[0]
 
     const viewedLinks = []
 
@@ -154,3 +155,20 @@ function requestCaptchaResults(apiKey, requestId) {
 }
 
 const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
+
+const filePath = `${__dirname}/public/sites.xlsx`
+const workBook = XLSX.readFileSync(filePath)
+const sheetName = workBook.SheetNames
+
+const linksOnSites = () => {
+  const worksheets = {}
+  const sites = []
+
+  worksheets[sheetName] = XLSX.utils.sheet_to_json(workBook.Sheets[sheetName])
+
+  worksheets[sheetName].forEach((cell) => {
+    sites.push(cell['sites'])
+  });
+
+  return sites
+}
