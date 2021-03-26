@@ -24,7 +24,7 @@ const API_KEY = process.env.API_KEY;
   await page.setViewport({ width: 1920, height: 1080 })
   const urlsFromFile = readSitesFromExcel()
 
-  for ( const i = 0; i < urlsFromFile.length; i++ ) {
+  for ( let i = 0; i < urlsFromFile.length; i++ ) {
     try {
       const urlSite = urlsFromFile[i]
       console.log('Watching the site:', urlSite);
@@ -34,7 +34,7 @@ const API_KEY = process.env.API_KEY;
       await searchProcess(page, urlSite, viewedLinks)
       console.log('Process on site is closed');
     } catch(err) {
-      console.log('Error from main function:', err)// todo continue next file
+      console.log('Error from main function:', err)
       writeInExcel(urlSite, 'Error from main function')
     }
   }
@@ -46,21 +46,20 @@ async function searchProcess(page, url, viewedLinks) {
 
   const formOnPage = await page.$$('form')
 
-  if (formOnPage.length !== 0) {
+  if (formOnPage.length !== 0) { //todo check on correct form
     console.log('I found forms');
     try {
-      //todo check on correct form
       await fillInForm(page)
       await recaptcha(page)
-      //todo check send form
+      //todo check send form?
       writeInExcel(url, 'Form completed and send')
       console.log('After fill in form');
-      //return;
+      return true;
     } catch(err) {
       // if (err) throw err
       console.log("Errors when filling form and send: \n", err)
       writeInExcel(url, 'Errors when filling form and send')
-      //return;
+      // return false;
     }
   } else {
     const links = await searchLinks(page)
@@ -74,6 +73,7 @@ async function searchProcess(page, url, viewedLinks) {
     console.log("New links without visits:", newLinks);
 
     for (const link of newLinks) {
+      //todo check link
       console.log("Watching this link now:", link);
       viewedLinks.push(link)
 
@@ -81,6 +81,8 @@ async function searchProcess(page, url, viewedLinks) {
 
       await page.goto(link, { waitUntil: 'networkidle2' })
       await searchProcess(page, link, viewedLinks)
+      console.log('return false from links loop \n');
+      return false;
       // todo
       // if watched all links and dont find form, then return false in file
     }
@@ -99,6 +101,7 @@ async function searchLinks(page) {
 }
 
 async function fillInForm(page) {
+  //todo form for all sites. now only for https://www.ppcadeditor.com/contact-us/
   await page.type('.frm_form_fields #field_qh4icy', USER_NAME)
   await page.type('.frm_form_fields #field_ocfup1', PHONE)
   await page.type('.frm_form_fields #field_29yf4d', EMAIL)
