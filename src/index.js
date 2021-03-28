@@ -62,7 +62,7 @@ async function searchProcess(page, url, viewedLinks) {
       // return false;
     }
   } else {
-    const links = await searchLinks(page)
+    const links = await searchLinks(page, url)
     const linksWithoutDouble = Array.from(new Set(links))
     
     console.log("Links from page on which watch now:", linksWithoutDouble);
@@ -89,15 +89,18 @@ async function searchProcess(page, url, viewedLinks) {
   }
 }
 
-async function searchLinks(page) {
-    const anchors = await page.$$('a')
+async function searchLinks(page, basicUrl) {
+  const anchors = await page.$$('a')
 
-    const propertyJsHandles = await Promise.all(
-      anchors.map(handle => handle.getProperty('href'))
-      );
-    return await Promise.all(
-      propertyJsHandles.map(handle => handle.jsonValue())
+  const propertyJsHandles = await Promise.all(
+    anchors.map(handle => handle.getProperty('href'))
     );
+  const newLinks = await Promise.all(
+    propertyJsHandles.map(handle => handle.jsonValue())
+  );
+  return await Promise.all(
+    newLinks.filter(newLink => isHomeLink(basicUrl, newLink))
+  );
 }
 
 async function fillInForm(page) {
@@ -171,3 +174,10 @@ function requestCaptchaResults(apiKey, requestId) {
 }
 
 const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
+
+function isHomeLink(basicLink, newLink) {
+  let firstLink = basicLink.split('//')[1].split('/')[0]
+  let secondLink = newLink.split('//')[1].split('/')[0]
+
+  return (firstLink === secondLink) ? true : false;
+}
