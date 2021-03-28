@@ -43,7 +43,7 @@ async function searchProcess(page, url, viewedLinks) {
     console.log('I found forms');
     try {
       await fillInForm(page)
-      await recaptcha(page)
+      await recaptcha(page, url)
       //todo check send form?
       writeInExcel(url, 'Form completed and send')
       console.log('After fill in form');

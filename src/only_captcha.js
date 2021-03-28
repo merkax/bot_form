@@ -21,10 +21,12 @@ const API_KEY = process.env.API_KEY;
   const page = await browser.newPage()
   await page.setViewport({ width: 1920, height: 1080 }) 
   
-  const urlFromFile = 'https://www.ppcadeditor.com/contact-us/'
+  const url = 'https://www.ppcadeditor.com/contact-us/'
   await page.goto(urlFromFile, { waitUntil: 'networkidle2' })
 
-  const requestId = await initiateCaptchaRequest(API_KEY)
+  const googleKey = await findGoogleKey(page)
+
+  const requestId = await initiateCaptchaRequest(API_KEY, googleKey, url)
 
   // from https://chrome.google.com/webstore/detail/headless-recorder/djeegiggegleadkkbgopoonhjimgehda
   await page.type('.frm_form_fields #field_qh4icy', USER_NAME)
@@ -50,12 +52,20 @@ const API_KEY = process.env.API_KEY;
   // await browser.close()
 })()
 
-async function initiateCaptchaRequest(apiKey) {
+async function findGoogleKey(page) {
+  const allDiv = await page.evaluate(
+    () => [...document.querySelectorAll('div')] // not best solution
+      .map(element => element.getAttribute('data-sitekey'))
+  );
+  return allDiv.filter(value => value != null)[0]
+}
+
+async function initiateCaptchaRequest(apiKey, googleKey, url) {
   const formData = {
     method: 'userrecaptcha',
     key: apiKey,
-    googlekey: '6LeVzf8ZAAAAAFS0jeTpV4lPt7e4r9dX3d6uUYer',
-    pageurl: 'https://www.ppcadeditor.com/contact-us/',
+    googlekey: googleKey,
+    pageurl: url,
     json: 1
   };
   console.log(`Submiting solution request to 2captcha for` );

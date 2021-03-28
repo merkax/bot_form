@@ -17,8 +17,10 @@ async function fillInForm(page) {
   await page.type('.frm_form_fields #field_9jv0r1', OFFER)
 }
 
-async function recaptcha(page) {
-  const requestId = await initiateCaptchaRequest(API_KEY)
+async function recaptcha(page, url) {
+  const googleKey = await findGoogleKey(page)
+
+  const requestId = await initiateCaptchaRequest(API_KEY, googleKey, url)
   console.log("requestId", requestId);
 
   const response = await pollForRequestResults(API_KEY, requestId)
@@ -36,12 +38,20 @@ async function recaptcha(page) {
   console.log("After submit");
 }
 
-async function initiateCaptchaRequest(apiKey) {
+async function findGoogleKey(page) {
+  const allDiv = await page.evaluate(
+    () => [...document.querySelectorAll('div')] // not best solution
+      .map(element => element.getAttribute('data-sitekey'))
+  );
+  return allDiv.filter(value => value != null)[0]
+}
+
+async function initiateCaptchaRequest(apiKey, googleKey, url) {
   const formData = {
     method: 'userrecaptcha',
     key: apiKey,
-    googlekey: '6LeVzf8ZAAAAAFS0jeTpV4lPt7e4r9dX3d6uUYer',
-    pageurl: 'https://www.ppcadeditor.com/contact-us/',
+    googlekey: googleKey,
+    pageurl: url,
     json: 1
   };
   console.log(`Submiting solution request to 2captcha for`);
